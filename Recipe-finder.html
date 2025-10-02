@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Finder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .ingredient-input-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .ingredients-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            min-height: 40px;
+        }
+
+        .ingredient-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .remove-btn {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .remove-btn:hover {
+            background: rgba(255,255,255,0.5);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 0.95em;
+            background: white;
+            cursor: pointer;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .recipes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .recipe-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .recipe-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .recipe-content {
+            padding: 20px;
+        }
+
+        .recipe-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .recipe-info {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #666;
+            flex-wrap: wrap;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .recipe-ingredients {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #888;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .empty-state h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .demo-note {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        .demo-note strong {
+            color: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍳 Recipe Finder</h1>
+            <p class="subtitle">Find tasty recipes using ingredients you already have!</p>
+        </header>
+
+        <div class="search-section">
+          
+            <div class="ingredient-input-wrapper">
+                <input type="text" id="ingredientInput" placeholder="Type an ingredient (like chicken, pasta, tomato...)">
+                <button onclick="addIngredient()">➕ Add</button>
+            </div>
+
+            <div class="ingredients-list" id="ingredientsList"></div>
+
+            <div class="filters">
+                <select id="dietFilter">
+                    <option value="">🍽️ All Diets</option>
+                    <option value="balanced">Balanced</option>
+                    <option value="high-protein">High Protein</option>
+                    <option value="low-carb">Low Carb</option>
+                    <option value="low-fat">Low Fat</option>
+                </select>
+
+                <select id="cuisineFilter">
+                    <option value="">🌍 All Cuisines</option>
+                    <option value="american">American</option>
+                    <option value="asian">Asian</option>
+                    <option value="chinese">Chinese</option>
+                    <option value="french">French</option>
+                    <option value="indian">Indian</option>
+                    <option value="italian">Italian</option>
+                    <option value="japanese">Japanese</option>
+                    <option value="mediterranean">Mediterranean</option>
+                    <option value="mexican">Mexican</option>
+                </select>
+
+                <select id="mealFilter">
+                    <option value="">⏰ Any Time</option>
+                    <option value="breakfast">Breakfast</option>
+                    <option value="lunch">Lunch</option>
+                    <option value="dinner">Dinner</option>
+                    <option value="snack">Snack</option>
+                </select>
+            </div>
+
+            <button onclick="searchRecipes()" style="width: 100%; font-size: 1.1em;">🔍 Find My Recipes!</button>
+        </div>
+
+        <div id="errorMessage"></div>
+        <div id="loading"></div>
+        <div id="recipesContainer"></div>
+    </div>
+
+    <script>
+        let ingredients = [];
+
+        // Demo API credentials (using Edamam demo account)
+        const API_ID = '3768e8df';
+        const API_KEY = '2d02987c970dd14a46eee95457b1d697	';
+
+        function addIngredient() {
+            const input = document.getElementById('ingredientInput');
+            const ingredient = input.value.trim();
+            
+            if (ingredient && !ingredients.includes(ingredient.toLowerCase())) {
+                ingredients.push(ingredient.toLowerCase());
+                updateIngredientsList();
+                input.value = '';
+                
+                // Clear any previous error messages
+                document.getElementById('errorMessage').innerHTML = '';
+            } else if (ingredients.includes(ingredient.toLowerCase())) {
+                showMessage('You already added that ingredient!', 'error');
+            }
+        }
+
+        function removeIngredient(ingredient) {
+            ingredients = ingredients.filter(item => item !== ingredient);
+            updateIngredientsList();
+        }
+
+        function updateIngredientsList() {
+            const list = document.getElementById('ingredientsList');
+            if (ingredients.length === 0) {
+                list.innerHTML = '<p style="color: #999; font-style: italic;">No ingredients added yet. Start by adding what you have!</p>';
+            } else {
+                list.innerHTML = ingredients.map(ingredient => `
+                    <div class="ingredient-tag">
+                        <span>${ingredient}</span>
+                        <button class="remove-btn" onclick="removeIngredient('${ingredient}')">×</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function showMessage(message, type) {
+            const errorDiv = document.getElementById('errorMessage');
+            const className = type === 'error' ? 'error-message' : 'success-message';
+            errorDiv.innerHTML = `<div class="${className}">${message}</div>`;
+            
+            setTimeout(() => {
+                errorDiv.innerHTML = '';
+            }, 4000);
+        }
+
+        document.getElementById('ingredientInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addIngredient();
+            }
+        });
+
+        async function searchRecipes() {
+            const errorDiv = document.getElementById('errorMessage');
+            const loadingDiv = document.getElementById('loading');
+            const recipesDiv = document.getElementById('recipesContainer');
+
+            errorDiv.innerHTML = '';
+            recipesDiv.innerHTML = '';
+
+            if (ingredients.length === 0) {
+                showMessage('⚠️ Please add at least one ingredient to find recipes!', 'error');
+                return;
+            }
+
+            loadingDiv.innerHTML = '<div class="loading"><div class="spinner"></div>🔎 Searching for delicious recipes with your ingredients...</div>';
+
+            try {
+                const diet = document.getElementById('dietFilter').value;
+                const cuisine = document.getElementById('cuisineFilter').value;
+                const meal = document.getElementById('mealFilter').value;
+
+                let url = `https://api.edamam.com/search?q=${ingredients.join(',')}&app_id=${API_ID}&app_key=${API_KEY}&to=12`;
+                
+                if (diet) url += `&diet=${diet}`;
+                if (cuisine) url += `&cuisineType=${cuisine}`;
+                if (meal) url += `&mealType=${meal}`;
+
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+                
+                const data = await response.json();
+
+                loadingDiv.innerHTML = '';
+
+                if (data.hits && data.hits.length > 0) {
+                    showMessage(`✅ Found ${data.hits.length} amazing recipes for you!`, 'success');
+                    displayRecipes(data.hits);
+                } else {
+                    recipesDiv.innerHTML = `
+                        <div class="empty-state">
+                            <h2>😕 No recipes found</h2>
+                            <p>Try adding different ingredients or changing your filters!</p>
+                            <p style="margin-top: 10px;">💡 Tip: Popular ingredients like chicken, pasta, rice, or tomatoes usually give great results!</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                loadingDiv.innerHTML = '';
+                showMessage('❌ Oops! Something went wrong while searching. Please try again in a moment.', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        function displayRecipes(hits) {
+            const recipesDiv = document.getElementById('recipesContainer');
+            recipesDiv.innerHTML = '<div class="recipes-grid">' + hits.map(hit => {
+                const recipe = hit.recipe;
+                const ingredientCount = recipe.ingredientLines ? recipe.ingredientLines.length : 0;
+                
+                return `
+                    <div class="recipe-card" onclick="window.open('${recipe.url}', '_blank')">
+                        <img src="${recipe.image}" alt="${recipe.label}" class="recipe-image" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">${recipe.label}</h3>
+                            <div class="recipe-info">
+                                <div class="info-item">
+                                    <span>🔥</span>
+                                    <span>${Math.round(recipe.calories / recipe.yield)} calories</span>
+                                </div>
+                                <div class="info-item">
+                                    <span>👥</span>
+                                    <span>${recipe.yield} servings</span>
+                                </div>
+                                <div class="info-item">
+                                    <span>📝</span>
+                                    <span>${ingredientCount} ingredients</span>
+                                </div>
+                            </div>
+                            <div class="recipe-ingredients">
+                                💡 Click to see full recipe and cooking instructions!
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('') + '</div>';
+        }
+
+        // Initialize the ingredients list on page load
+        updateIngredientsList();
+    </script>
+</body>
+</html>
